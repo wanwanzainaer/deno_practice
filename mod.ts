@@ -1,4 +1,5 @@
 import { Application, send } from "./dept.ts";
+import apiRouter from "./api.ts";
 const app = new Application();
 const PORT = 9000;
 
@@ -13,7 +14,8 @@ app.use(async (ctx, next) => {
   const delta = Date.now() - start;
   ctx.response.headers.set("X-Response-Time", `${delta}ms`);
 });
-
+app.use(apiRouter.routes());
+app.use(apiRouter.allowedMethods());
 app.use(async (ctx) => {
   const filePath = ctx.request.url.pathname;
   const fileWhitelist = [
@@ -22,13 +24,11 @@ app.use(async (ctx) => {
     "/stylesheets/style.css",
     "/images/favicon.png",
   ];
-  await send(ctx, filePath, {
-    root: `${Deno.cwd()}/public`,
-  });
-});
-app.use(async (ctx, next) => {
-  ctx.response.body = "Hello world";
-  await next();
+  if (fileWhitelist.includes(filePath)) {
+    await send(ctx, filePath, {
+      root: `${Deno.cwd()}/public`,
+    });
+  }
 });
 if (import.meta.main) {
   await app.listen({ port: PORT });
