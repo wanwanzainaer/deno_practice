@@ -9,6 +9,18 @@ type Planet = Record<string, string>;
 
 let planets: Array<Planet>;
 
+export function filterHabitablePlanets(planets: Array<Planet>) {
+  return planets.filter((planet) => {
+    const plantaryRadius = Number(planet["koi_prad"]);
+    const stellarMass = Number(planet["koi_smass"]);
+    const stellarRadius = Number(planet["koi_srad"]);
+
+    return planet["koi_disposition"] === "CONFIRMED" && plantaryRadius > 0.5 &&
+      plantaryRadius < 1.5 && stellarMass > 0.78 && stellarMass < 1.04 &&
+      stellarRadius > 0.99 && stellarRadius < 1.01;
+  });
+}
+
 async function loadPlanetsData() {
   const path = join("data", "original.csv");
   const file = await Deno.open(path);
@@ -19,15 +31,8 @@ async function loadPlanetsData() {
     comment: "#",
   });
   Deno.close(file.rid);
-  const planets = (reslut as Array<Planet>).filter((planet) => {
-    const plantaryRadius = Number(planet["koi_prad"]);
-    const stellarMass = Number(planet["koi_smass"]);
-    const stellarRadius = Number(planet["koi_srad"]);
+  const planets = filterHabitablePlanets(reslut as Array<Planet>);
 
-    return planet["koi_disposition"] === "CONFIRMED" && plantaryRadius > 0.5 &&
-      plantaryRadius < 1.5 && stellarMass > 0.78 && stellarMass < 1.04 &&
-      stellarRadius > 0.99 && stellarRadius < 1.01;
-  });
   return planets.map((planet) => {
     return _.pick(planet, [
       "koi_prad",
@@ -41,7 +46,6 @@ async function loadPlanetsData() {
 }
 
 planets = await loadPlanetsData();
-
 console.log(`${planets.length} habitable planets found!`);
 
 export function getAllPlanets() {
