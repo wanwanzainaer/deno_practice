@@ -2,6 +2,7 @@ import { join } from "https://deno.land/std/path/mod.ts";
 import { BufReader } from "https://deno.land/std/io/bufio.ts";
 import { parse } from "https://deno.land/std/encoding/csv.ts";
 import _ from "https://raw.githubusercontent.com/lodash/lodash/4.17.15-es/lodash.js";
+import { log } from "../dept.ts";
 // interface Planet {
 //   [key: string]: string;
 // }
@@ -46,7 +47,7 @@ async function loadPlanetsData() {
 }
 
 planets = await loadPlanetsData();
-console.log(`${planets.length} habitable planets found!`);
+log.info(`${planets.length} habitable planets found!`);
 
 export function getAllPlanets() {
   return planets;

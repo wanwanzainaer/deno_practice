@@ -1,12 +1,36 @@
-import { Application, send } from "./dept.ts";
+import { Application, send, log } from "./dept.ts";
 import apiRouter from "./api.ts";
 const app = new Application();
 const PORT = 9000;
 
+await log.setup({
+  handlers: {
+    console: new log.handlers.ConsoleHandler("INFO"),
+  },
+  loggers: {
+    default: {
+      level: "INFO",
+      handlers: ["console"],
+    },
+  },
+});
+app.addEventListener("error", (event) => {
+  log.error(event.error);
+});
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    console.log(err);
+    ctx.response.body = "Internal server error";
+    throw err;
+  }
+});
+
 app.use(async (ctx, next) => {
   await next();
   const time = ctx.response.headers.get("X-Response-Time");
-  console.log(`${ctx.request.method} ${ctx.request.url}: ${time}`);
+  log.info(`${ctx.request.method} ${ctx.request.url}: ${time}`);
 });
 app.use(async (ctx, next) => {
   const start = Date.now();
@@ -23,6 +47,7 @@ app.use(async (ctx) => {
     "/javascripts/script.js",
     "/stylesheets/style.css",
     "/images/favicon.png",
+    "/viedos/space.mp4",
   ];
   if (fileWhitelist.includes(filePath)) {
     await send(ctx, filePath, {
@@ -31,5 +56,6 @@ app.use(async (ctx) => {
   }
 });
 if (import.meta.main) {
+  log.info(`Starting server on port ${PORT}`);
   await app.listen({ port: PORT });
 }
